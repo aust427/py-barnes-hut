@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import tqdm
+
 
 class leaf():
     def __init__(self, bbox=np.array([[-1, 1],[-1, 1]]), depth=1):
@@ -139,3 +141,7 @@ def RK4(r, t_start=0, t_end=10, N=1e4):
 
 def leapfrog():
     return 0 
+
+if name == __main__: 
+    theta = 0.1
+    softening = 0.01

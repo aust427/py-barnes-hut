@@ -71,12 +71,12 @@ def assignParticle(p, node):
     return node
     
 
-def solve_acc(p, node, epsilon=0.0, G = 1e-3, m_scale=1, r_scale=1): 
+def solve_acc(p, node, epsilon=1e-3, G = 1e-3, m_scale=1, r_scale=1): 
     # do psudo periodic boundary conditions here 
-    return G * m_scale * node.mass * (node.com - p + epsilon) / sum((node.com - p + epsilon)**2)**(3 / 2)
+    return G * m_scale * node.mass * (node.com - p) / sum((node.com - p)**2 + epsilon)**(3 / 2)
 
 
-def f_multipole(p, node, theta=0.0):  
+def f_multipole(p, node, theta=0.5):  
     # check to see if particle is looking at itself,return 0 
     if node.mass is not None and sum((node.com - p)**2)**0.5 < 1e-10:
         return np.zeros(2) 
@@ -97,7 +97,7 @@ def f_multipole(p, node, theta=0.0):
         
 
 def leapfrog(r, t_start=0, t_end=10, N=1e4, L=2):
-    dt = 0.01 # (t_end - t_start)/N
+    dt = (t_end - t_start)/N
 
     tpoints = np.arange(t_start, t_end, dt)
     xpoints = []

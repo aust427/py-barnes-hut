@@ -7,12 +7,18 @@ import moviepy.video.io.ImageSequenceClip
 
 from simulation import leaf, QuadTree
         
-def plotter(ax, node, c, alpha=0.1, zorder=1, ls='-'):
+def plotter(ax, node, c, alpha=0.5, zorder=1, ls='-'):
     ax.plot(
-    [node.center[0] + node.length / 2, node.center[0] - node.length / 2, node.center[0] - node.length / 2, 
-     node.center[0] + node.length / 2, node.center[0] + node.length / 2],
-    [node.center[1] + node.length / 2, node.center[1] + node.length / 2, node.center[1] - node.length / 2, 
-     node.center[1] - node.length / 2, node.center[1] + node.length / 2], 
+    [node.center[0] + node.length[0] / 2, 
+     node.center[0] - node.length[0] / 2, 
+     node.center[0] - node.length[0] / 2, 
+     node.center[0] + node.length[0] / 2, 
+     node.center[0] + node.length[0] / 2],
+    [node.center[1] + node.length[0] / 2, 
+     node.center[1] + node.length[0] / 2, 
+     node.center[1] - node.length[0] / 2, 
+     node.center[1] - node.length[0] / 2, 
+     node.center[1] + node.length[0] / 2], 
     alpha=alpha, c=c, zorder=zorder, ls=ls)
 #     plt.scatter(node.com[0], node.com[1])
     

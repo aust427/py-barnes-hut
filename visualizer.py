@@ -7,13 +7,13 @@ import moviepy.video.io.ImageSequenceClip
 
 from simulation import leaf, QuadTree
         
-def plotter(ax, node, c, alpha=0.1):
+def plotter(ax, node, c, alpha=0.1, zorder=1, ls='-'):
     ax.plot(
     [node.center[0] + node.length / 2, node.center[0] - node.length / 2, node.center[0] - node.length / 2, 
      node.center[0] + node.length / 2, node.center[0] + node.length / 2],
     [node.center[1] + node.length / 2, node.center[1] + node.length / 2, node.center[1] - node.length / 2, 
      node.center[1] - node.length / 2, node.center[1] + node.length / 2], 
-    alpha=alpha, c=c)
+    alpha=alpha, c=c, zorder=zorder, ls=ls)
 #     plt.scatter(node.com[0], node.com[1])
     
     return 0 
@@ -23,12 +23,12 @@ def drawTree(ax, node):
     if isinstance(node, leaf):
         if node.com is not None: 
             plotter(ax, node, 'c', 0.2)
-            return 0 
+        return 0 
     else: 
         plotter(ax, node, 'white', 0.05)
         _ = [drawTree(ax, n) for n in [node.ul, node.ur, node.ll, node.lr]]
         
-        
+
 
 def renderParticles(particles_list, trees, tpoints, save_dir):
     for particles, tree, t in zip(particles_list, trees, tpoints): 
@@ -40,8 +40,10 @@ def renderParticles(particles_list, trees, tpoints, save_dir):
         ax.set_ylabel('y [Mpc]')
 
         drawTree(ax, tree)
-        ax.scatter(particles[:, 0], particles[:, 1], c='white', s=0.5)
-        plt.savefig('{}/frame_{}.png'.format(save_dir, t), bbox_inches='tight', pad_inches = 0, dpi=200)
+        
+        ax.scatter(particles[:, 0], particles[:, 1], c='white', s=0.5, zorder=10)
+        
+        plt.savefig('{}/frame_{}.png'.format(save_dir, t), bbox_inches='tight', pad_inches = 0, dpi=100)
         plt.close()
             
     return

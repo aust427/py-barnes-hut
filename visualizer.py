@@ -39,8 +39,8 @@ def drawTree(ax, node):
 def renderParticles(particles_list, trees, tpoints, save_dir):
     for particles, tree, t in zip(particles_list, trees, tpoints): 
         fig, ax = plt.subplots(1, 1, figsize=(6, 6))
-        ax.set_xlim(-1.05, 1.05)
-        ax.set_ylim(-1.05, 1.05)
+        ax.set_xlim(-tree.length[0] / 2 - 0.05, tree.length[0] / 2 + 0.05)
+        ax.set_ylim(-tree.length[0] / 2 - 0.05, tree.length[0] / 2 + 0.05)
         ax.set_facecolor("black")
         ax.set_xlabel('x [Mpc]')
         ax.set_ylabel('y [Mpc]')

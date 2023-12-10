@@ -76,7 +76,7 @@ def assignParticle(p, node):
         
     return node
     
-
+    
 def in_box(com, corners):
     # a point is in a box if it is gt the bottom left corner and lt top right corner 
     return (com[0] >= corners[0][0] and com[0] <= corners[1][0]) and (com[1] >= corners[0][1] and com[1] <= corners[1][1])
@@ -88,15 +88,24 @@ def subnode(bbox=np.array([[-1, 1],[-1, 1]]), parent_area=1, parent_mass=1):
     n.mass = parent_mass * (n.length[0]*n.length[1]) / parent_area
     
     return n
+  
     
     
+
 def solve_acc(p, node, L, epsilon=1e-3, G = 1e-6, m_scale=1e3, r_scale=1): 
+
+#     plt.scatter(p[0], p[1], c='yellow', marker='*', zorder=10)
     # create the 'new' box surrounding the particle 
     bound_corners = np.array([[p[0] - L/2, p[1] - L/2],
                               [p[0] + L/2, p[1] - L/2],
                               [p[0] + L/2, p[1] + L/2],
                               [p[0] - L/2, p[1] + L/2]])
-
+    
+    box = np.vstack((bound_corners[0], bound_corners[1], bound_corners[2], 
+                     bound_corners[3], bound_corners[0]))
+    
+#     plt.plot(box[:, 0], box[:, 1], c='white', ls='--')
+    
     n_com = copy.copy(node.com )
     n_c = copy.copy(node.center)
     n_l = copy.copy(node.length)
@@ -111,15 +120,25 @@ def solve_acc(p, node, L, epsilon=1e-3, G = 1e-6, m_scale=1e3, r_scale=1):
     # if not all or no corners are in, it straddles the boundary and must be subdivided
     # this is the subdivision block. hard to change ... 
     if sum(t) < 4 and sum(t) > 0: 
+#         return np.array([0, 0])
+
+#         plotter(AX, node, 'orange', alpha=0.5, zorder=3, ls='-.')
+        
         # find the minimum distance to the cell walls
         lx = min(abs(np.array([n_l[0]/2 - (n_c[0] - n_com[0]), n_l[0]/2 + (n_c[0] - n_com[0]) ])))
         ly = min(abs(np.array([n_l[1]/2 - (n_c[1] - n_com[1]), n_l[1]/2 + (n_c[1] - n_com[1]) ])))
         
         # establish the boundaries of the new 'cell' with evenly distributed mass 
+        # re_corners = np.array([[n_com[0] - lx, n_com[1] - ly], [n_com[0] + lx, n_com[1] + ly]])
+
+        # establish the boundaries of the new 'cell' with evenly distributed mass 
         re_corners = np.array([[n_com[0] - lx, n_com[1] - ly], 
                                [n_com[0] - lx, n_com[1] + ly],
                                [n_com[0] + lx, n_com[1] + ly],
                                [n_com[0] + lx, n_com[1] - ly]])
+        
+#         box = np.vstack((re_corners[0], re_corners[1], re_corners[2], re_corners[3], re_corners[0]))
+#         plt.plot(box[:, 0], box[:, 1], c='orange', ls='--', alpha=0.25)
         
         # check how many corners are in the effective interaction volume 
         t = [in_box(corner, bound_corners[[0, 2]]) for corner in re_corners]
@@ -140,7 +159,13 @@ def solve_acc(p, node, L, epsilon=1e-3, G = 1e-6, m_scale=1e3, r_scale=1):
                                         [b_corner[0] - 1e-9, re_corners[2][1]]]), 
                         parent_mass=n_m, parent_area=4 * lx * ly)
             
-            return np.vstack([solve_acc(p, n_, L) for n_ in [n1, n2, n3, n4]]).sum(axis=0)
+            
+#             [plt.scatter(n_.center[0], n_.center[1], c='orange', alpha=0.5, marker='+') for n_ in [n1, n2, n3, n4]]
+#             [plotter(AX, n_, 'orange', alpha=0.5, zorder=3, ls='-.') for n_ in [n1, n2, n3, n4]]
+            return np.vstack([solve_acc(p, n_, L, epsilon=epsilon, G = G, m_scale=m_scale, r_scale=r_scale) 
+                              for n_ in [n1, n2, n2, n3]]).sum(axis=0)
+
+
             
         # if two corners, need to split into half 
         elif sum(t) == 2:
@@ -172,50 +197,59 @@ def solve_acc(p, node, L, epsilon=1e-3, G = 1e-6, m_scale=1e3, r_scale=1):
                             parent_mass=n_m, parent_area=4 * lx * ly)
                 n2 = subnode(bbox=np.array( [[re_corners[0][0], bound_corners[0][1] + 1e-9], re_corners[2]]), 
                             parent_mass=n_m, parent_area=4 * lx * ly)
+#             [plt.scatter(n_.center[0], n_.center[1], c='orange', alpha=0.5, marker='+') for n_ in [n1, n2]]
 
-            return np.vstack([solve_acc(p, n_, L) for n_ in [n1, n2]]).sum(axis=0)
+            return np.vstack([solve_acc(p, n_, L, epsilon=epsilon, G = G, m_scale=m_scale, r_scale=r_scale) for n_ in [n1, n2]]).sum(axis=0)
                 
     
     # check if the node's center of mass is within the box. if it is, return standard force calculation 
+    # you technically do not need this code block but keep it for now 
+    # if sum(t) == 0: 
     if in_box(n_com, bound_corners[[0, 2]]) :
+#         plt.plot(node.com[0], node.com[1], c='cyan', marker='+')
         return G * m_scale * node.mass * (n_com - p) / sum((n_com - p)**2 + epsilon)**(3 / 2)
     
     # now we know for sure it's not in the effective volume. we need to then see if the node's box overlaps with our periodic boundary
+    # we can check this by seeing if any of the node box's corner's are in the boundary. 
+#     plotter(AX, node, 'lime', alpha=0.25, ls='--')
+
     # we determine the node boundary is outside periodic boundary thus we need to figure out where to loop 
     n_c[n_com > p + L/2] = n_c[n_com > p + L/2] - L
     n_c[n_com < p -L/2] = n_c[n_com < p + -L/2] + L
     
     n_com[n_com > p + L/2] = n_com[n_com > p + L/2] - L
     n_com[n_com < p -L/2] = n_com[n_com < p + -L/2] + L
+    
 
     s = leaf()
     s.com = copy.copy(n_com)
     s.center = copy.copy(n_c)
     s.mass = copy.copy(node.mass )
     s.length = copy.copy(node.length)
+#     plotter(AX, s, 'lime', alpha=0.25, ls = '-')
     
-    return solve_acc(p, s, L)
+    return solve_acc(p, s, L, epsilon=epsilon, G = G, m_scale=m_scale, r_scale=r_scale)
 
 
-def f_multipole(p, node, L, theta=0.5):  
+def f_multipole(p, node, L, theta=0.5, epsilon=1e-3, m_scale=1e-3):  
     # check to see if particle is looking at itself,return 0 
     if node.mass is not None and sum((node.com - p)**2)**0.5 < 1e-10:
         return np.zeros(2) 
     
     # if a leaf node and has a particle, directly solve for gravity 
     if isinstance(node, leaf) and node.mass is not None:
-        return solve_acc(p, node, L)
+        return solve_acc(p, node, L, epsilon=epsilon, m_scale=m_scale)
     # if a leaf node and doesn't have a particle, return 0
     elif isinstance(node, leaf) and node.mass is None:
         return np.zeros(2)
     
     # if a quadtree that satisfies multipole condition, solve for gravity
     if isinstance(node, QuadTree) and node.length[0] / sum((node.com - p)**2)**0.5 <= theta: 
-        return solve_acc(p, node, L)
+        return solve_acc(p, node, L, epsilon=epsilon, m_scale=m_scale)
     # else if quadtree and hasn't satisfied, recursively search the tree's children 
     elif isinstance(node, QuadTree) and node.length[0] / sum((node.com - p)**2)**0.5 > theta: 
-        return sum(np.array([f_multipole(p, ch, L, theta=theta) for ch in [node.ll, node.ur, node.lr, node.ul]]))
-        
+        return sum(np.array([f_multipole(p, ch, L, theta=theta, epsilon=epsilon, m_scale=m_scale) for ch in [node.ll, node.ur, node.lr, node.ul]]))
+          
 
 def leapfrog(r, t_start=0, t_end=10, N=1e4, L=2, theta=0.5, multi=False):
     dt = (t_end - t_start)/N

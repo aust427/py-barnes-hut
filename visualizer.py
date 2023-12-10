@@ -36,20 +36,20 @@ def drawTree(ax, node):
         
 
 
-def renderParticles(particles_list, trees, tpoints, save_dir):
+def renderParticles(particles_list, trees, tpoints, save_dir, dpi):
     for particles, tree, t in zip(particles_list, trees, tpoints): 
         fig, ax = plt.subplots(1, 1, figsize=(6, 6))
         ax.set_xlim(-tree.length[0] / 2 - 0.05, tree.length[0] / 2 + 0.05)
         ax.set_ylim(-tree.length[0] / 2 - 0.05, tree.length[0] / 2 + 0.05)
         ax.set_facecolor("black")
-        ax.set_xlabel('x [Mpc]')
-        ax.set_ylabel('y [Mpc]')
+#         ax.set_xlabel('x [Mpc]')
+#         ax.set_ylabel('y [Mpc]')
 
         drawTree(ax, tree)
         
         ax.scatter(particles[:, 0], particles[:, 1], c='white', s=0.5, zorder=10)
         
-        plt.savefig('{}/frame_{}.png'.format(save_dir, t), bbox_inches='tight', pad_inches = 0, dpi=100)
+        plt.savefig('{}/frame_{}.png'.format(save_dir, t), bbox_inches='tight', pad_inches = 0, dpi=dpi)
         plt.close()
             
     return

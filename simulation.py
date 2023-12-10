@@ -5,9 +5,23 @@ from tqdm import tqdm
 
 import multiprocessing as mp
 
+# from numba.experimental import jitclass
+# from numba import jit
+
+# from numba import int32, float32    # import the types
+
 import copy 
    
-        
+
+# spec = [
+#     ('mass', float32),               # a simple scalar field
+#     ('depth', float32),               # a simple scalar field
+#     ('com', float32[:]),          # an array field
+#     ('center', float32[:]),          # an array field
+#     ('length', float32[:]),          # an array field
+# ]
+
+# @jitclass(spec)
 class leaf():
     def __init__(self, bbox=np.array([[-1, -1],[1, 1]]), depth=1):
         # if the leaf has a particle ... 
@@ -19,7 +33,7 @@ class leaf():
         self.length = bbox[1] - bbox[0]
         self.depth = depth 
 
-        
+# @jitclass(spec)
 class QuadTree():
     # tree constructor .. 
     def __init__(self, oleaf=leaf()):
@@ -41,7 +55,8 @@ class QuadTree():
                        bbox = np.array([oleaf.center + np.array([0, -1]) * oleaf.length / 2, 
                                         oleaf.center + np.array([1, 0]) * oleaf.length / 2]))
    
-        
+     
+# @jit
 def quadAssign(p, node): 
     theta = np.arctan2(p[1] - node.center[1], p[0] - node.center[0]) * 180 / np.pi
     if theta < 90 and theta > 0: 
@@ -54,7 +69,8 @@ def quadAssign(p, node):
         node.ll = assignParticle(p, node.ll)
     return node
     
-        
+
+# @jit
 def assignParticle(p, node):
     # if a leaf has no particle, assign particle to leaf 
     if isinstance(node, leaf) and node.com is None:
@@ -77,11 +93,13 @@ def assignParticle(p, node):
     return node
     
     
+# @jit    
 def in_box(com, corners):
     # a point is in a box if it is gt the bottom left corner and lt top right corner 
     return (com[0] >= corners[0][0] and com[0] <= corners[1][0]) and (com[1] >= corners[0][1] and com[1] <= corners[1][1])
 
 
+# @jit
 def subnode(bbox=np.array([[-1, 1],[-1, 1]]), parent_area=1, parent_mass=1): 
     n = leaf(bbox=bbox )    
     n.com = n.center 
@@ -90,22 +108,14 @@ def subnode(bbox=np.array([[-1, 1],[-1, 1]]), parent_area=1, parent_mass=1):
     return n
   
     
-    
-
+# @jit
 def solve_acc(p, node, L, epsilon=1e-3, G = 1e-6, m_scale=1e3, r_scale=1): 
-
-#     plt.scatter(p[0], p[1], c='yellow', marker='*', zorder=10)
     # create the 'new' box surrounding the particle 
     bound_corners = np.array([[p[0] - L/2, p[1] - L/2],
                               [p[0] + L/2, p[1] - L/2],
                               [p[0] + L/2, p[1] + L/2],
                               [p[0] - L/2, p[1] + L/2]])
-    
-    box = np.vstack((bound_corners[0], bound_corners[1], bound_corners[2], 
-                     bound_corners[3], bound_corners[0]))
-    
-#     plt.plot(box[:, 0], box[:, 1], c='white', ls='--')
-    
+        
     n_com = copy.copy(node.com )
     n_c = copy.copy(node.center)
     n_l = copy.copy(node.length)
@@ -119,26 +129,16 @@ def solve_acc(p, node, L, epsilon=1e-3, G = 1e-6, m_scale=1e3, r_scale=1):
     
     # if not all or no corners are in, it straddles the boundary and must be subdivided
     # this is the subdivision block. hard to change ... 
-    if sum(t) < 4 and sum(t) > 0: 
-#         return np.array([0, 0])
-
-#         plotter(AX, node, 'orange', alpha=0.5, zorder=3, ls='-.')
-        
+    if sum(t) < 4 and sum(t) > 0:  
         # find the minimum distance to the cell walls
         lx = min(abs(np.array([n_l[0]/2 - (n_c[0] - n_com[0]), n_l[0]/2 + (n_c[0] - n_com[0]) ])))
         ly = min(abs(np.array([n_l[1]/2 - (n_c[1] - n_com[1]), n_l[1]/2 + (n_c[1] - n_com[1]) ])))
         
         # establish the boundaries of the new 'cell' with evenly distributed mass 
-        # re_corners = np.array([[n_com[0] - lx, n_com[1] - ly], [n_com[0] + lx, n_com[1] + ly]])
-
-        # establish the boundaries of the new 'cell' with evenly distributed mass 
         re_corners = np.array([[n_com[0] - lx, n_com[1] - ly], 
                                [n_com[0] - lx, n_com[1] + ly],
                                [n_com[0] + lx, n_com[1] + ly],
                                [n_com[0] + lx, n_com[1] - ly]])
-        
-#         box = np.vstack((re_corners[0], re_corners[1], re_corners[2], re_corners[3], re_corners[0]))
-#         plt.plot(box[:, 0], box[:, 1], c='orange', ls='--', alpha=0.25)
         
         # check how many corners are in the effective interaction volume 
         t = [in_box(corner, bound_corners[[0, 2]]) for corner in re_corners]
@@ -159,13 +159,8 @@ def solve_acc(p, node, L, epsilon=1e-3, G = 1e-6, m_scale=1e3, r_scale=1):
                                         [b_corner[0] - 1e-9, re_corners[2][1]]]), 
                         parent_mass=n_m, parent_area=4 * lx * ly)
             
-            
-#             [plt.scatter(n_.center[0], n_.center[1], c='orange', alpha=0.5, marker='+') for n_ in [n1, n2, n3, n4]]
-#             [plotter(AX, n_, 'orange', alpha=0.5, zorder=3, ls='-.') for n_ in [n1, n2, n3, n4]]
             return np.vstack([solve_acc(p, n_, L, epsilon=epsilon, G = G, m_scale=m_scale, r_scale=r_scale) 
                               for n_ in [n1, n2, n2, n3]]).sum(axis=0)
-
-
             
         # if two corners, need to split into half 
         elif sum(t) == 2:
@@ -197,23 +192,17 @@ def solve_acc(p, node, L, epsilon=1e-3, G = 1e-6, m_scale=1e3, r_scale=1):
                             parent_mass=n_m, parent_area=4 * lx * ly)
                 n2 = subnode(bbox=np.array( [[re_corners[0][0], bound_corners[0][1] + 1e-9], re_corners[2]]), 
                             parent_mass=n_m, parent_area=4 * lx * ly)
-#             [plt.scatter(n_.center[0], n_.center[1], c='orange', alpha=0.5, marker='+') for n_ in [n1, n2]]
 
-            return np.vstack([solve_acc(p, n_, L, epsilon=epsilon, G = G, m_scale=m_scale, r_scale=r_scale) for n_ in [n1, n2]]).sum(axis=0)
+            return np.vstack([solve_acc(p, n_, L, epsilon=epsilon, G = G, m_scale=m_scale, r_scale=r_scale) 
+                              for n_ in [n1, n2]]).sum(axis=0)
                 
     
     # check if the node's center of mass is within the box. if it is, return standard force calculation 
-    # you technically do not need this code block but keep it for now 
     # if sum(t) == 0: 
     if in_box(n_com, bound_corners[[0, 2]]) :
-#         plt.plot(node.com[0], node.com[1], c='cyan', marker='+')
         return G * m_scale * node.mass * (n_com - p) / sum((n_com - p)**2 + epsilon)**(3 / 2)
     
     # now we know for sure it's not in the effective volume. we need to then see if the node's box overlaps with our periodic boundary
-    # we can check this by seeing if any of the node box's corner's are in the boundary. 
-#     plotter(AX, node, 'lime', alpha=0.25, ls='--')
-
-    # we determine the node boundary is outside periodic boundary thus we need to figure out where to loop 
     n_c[n_com > p + L/2] = n_c[n_com > p + L/2] - L
     n_c[n_com < p -L/2] = n_c[n_com < p + -L/2] + L
     
@@ -226,11 +215,11 @@ def solve_acc(p, node, L, epsilon=1e-3, G = 1e-6, m_scale=1e3, r_scale=1):
     s.center = copy.copy(n_c)
     s.mass = copy.copy(node.mass )
     s.length = copy.copy(node.length)
-#     plotter(AX, s, 'lime', alpha=0.25, ls = '-')
     
     return solve_acc(p, s, L, epsilon=epsilon, G = G, m_scale=m_scale, r_scale=r_scale)
 
 
+# @jit
 def f_multipole(p, node, L, theta=0.5, epsilon=1e-3, m_scale=1e-3):  
     # check to see if particle is looking at itself,return 0 
     if node.mass is not None and sum((node.com - p)**2)**0.5 < 1e-10:
@@ -249,9 +238,10 @@ def f_multipole(p, node, L, theta=0.5, epsilon=1e-3, m_scale=1e-3):
     # else if quadtree and hasn't satisfied, recursively search the tree's children 
     elif isinstance(node, QuadTree) and node.length[0] / sum((node.com - p)**2)**0.5 > theta: 
         return sum(np.array([f_multipole(p, ch, L, theta=theta, epsilon=epsilon, m_scale=m_scale) for ch in [node.ll, node.ur, node.lr, node.ul]]))
-          
-
-def leapfrog(r, t_start=0, t_end=10, N=1e4, L=2, theta=0.5, multi=False):
+         
+        
+# @jit
+def leapfrog(r, t_start=0, t_end=10, N=1e4, L=2, theta=0.5, multi=False, epsilon=1e-3, m_scale=1e3):
     dt = (t_end - t_start)/N
 
     tpoints = np.arange(t_start, t_end, dt)
@@ -262,9 +252,6 @@ def leapfrog(r, t_start=0, t_end=10, N=1e4, L=2, theta=0.5, multi=False):
     pos = r[:, 0:2]
     vel = r[:, 2: ]
     
-    n_cpu = mp.cpu_count()
-    pool = mp.Pool(processes=n_cpu)
-
     for t in tqdm(tpoints):
         # have to .copy() because we are updating the same array and that causes memory issues 
         xpoints.append(np.hstack((pos, vel, acc)))
@@ -275,36 +262,28 @@ def leapfrog(r, t_start=0, t_end=10, N=1e4, L=2, theta=0.5, multi=False):
         pos = pos + vel * dt 
         
         # update acceleration block. construct the quadtree for force modeling 
-        root = leaf()
+        root = leaf(bbox=np.array([[-L/2, -L/2], [L/2, L/2]]))
         # which we then can immediately turn into a tree 
         for p in pos: 
             root = assignParticle(p, root)
         trees.append(root)
 
         # calculate acceleration 
-        
-#         drawTree(AX, root)
-        # multiprocessing is good for large N (> 1000), can be optimized 
-        # if multi: 
-#         acc = np.vstack([pool.apply_async(f_multipole, args=(p, root, 0)).get() for p in pos])
-        # else: 
-        acc = np.array([f_multipole(p, root, root.length[0], theta=theta) for p in pos])
-        
+        acc = np.array([f_multipole(p, root, root.length[0], theta=theta, epsilon=epsilon, m_scale=m_scale) 
+                    for p in pos])
+
         # kick velocity a half time step using new updated acceleration  
         vel = vel + acc * dt / 2 
         
         # fix positions based on boundary conditions 
-        pos[pos[:, 0] > L/2, 0] = pos[pos[:, 0] > L/2, 0] - L
-        pos[pos[:, 0] < -L/2, 0] = pos[pos[:, 0] < -L/2, 0] + L
-        pos[pos[:, 1] > L/2, 1] = pos[pos[:, 1] > L/2, 1] - L
-        pos[pos[:, 1] < -L/2, 1] = pos[pos[:, 1] < -L/2, 1] + L
-        
-        
-    pool.close()
-    pool.join()
+        while(abs(pos[:, 0].max()) > L/2 and abs(pos[:, 1].max()) > L/2):
+            pos[pos[:, 0] > L/2, 0] = pos[pos[:, 0] > L/2, 0] - L
+            pos[pos[:, 0] < -L/2, 0] = pos[pos[:, 0] < -L/2, 0] + L
+            pos[pos[:, 1] > L/2, 1] = pos[pos[:, 1] > L/2, 1] - L
+            pos[pos[:, 1] < -L/2, 1] = pos[pos[:, 1] < -L/2, 1] + L
         
     return tpoints, np.array(xpoints), np.array(trees)
 
 
 if __name__ == "__main__":
-    sys.setrecursionlimit(2000) 
+    sys.setrecursionlimit(10000) 

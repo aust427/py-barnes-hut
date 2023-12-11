@@ -276,6 +276,8 @@ def leapfrog(r, t_start=0, t_end=10, N=1e4, L=2, theta=0.5, multi=False, epsilon
         vel = vel + acc * dt / 2 
         
         # fix positions based on boundary conditions 
+        # can probably change this to a modulo based statement ... 
+        # pos = -L/2 + (pos - -L/2) % L
         while(abs(pos[:, 0].max()) > L/2 and abs(pos[:, 1].max()) > L/2):
             pos[pos[:, 0] > L/2, 0] = pos[pos[:, 0] > L/2, 0] - L
             pos[pos[:, 0] < -L/2, 0] = pos[pos[:, 0] < -L/2, 0] + L

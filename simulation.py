@@ -4,24 +4,9 @@ import sys
 from tqdm import tqdm
 
 import os 
-
-import multiprocessing as mp
-
-# from numba.experimental import jitclass
-# from numba import jit
-
-# from numba import int32, float32    # import the types
+import sys 
 
 import copy 
-   
-
-# spec = [
-#     ('mass', float32),               # a simple scalar field
-#     ('depth', float32),               # a simple scalar field
-#     ('com', float32[:]),          # an array field
-#     ('center', float32[:]),          # an array field
-#     ('length', float32[:]),          # an array field
-# ]
 
 
 def genParticles(rand_type, sig=0, mu=0.1, L=1, N=10):
@@ -38,7 +23,6 @@ def genParticles(rand_type, sig=0, mu=0.1, L=1, N=10):
     return particles 
 
 
-# @jitclass(spec)
 class leaf():
     def __init__(self, bbox=np.array([[-1, -1],[1, 1]]), depth=1):
         # if the leaf has a particle ... 
@@ -50,7 +34,7 @@ class leaf():
         self.length = bbox[1] - bbox[0]
         self.depth = depth 
 
-# @jitclass(spec)
+
 class QuadTree():
     # tree constructor .. 
     def __init__(self, oleaf=leaf()):
@@ -73,7 +57,6 @@ class QuadTree():
                                         oleaf.center + np.array([1, 0]) * oleaf.length / 2]))
    
      
-# @jit
 def quadAssign(p, node): 
     theta = np.arctan2(p[1] - node.center[1], p[0] - node.center[0]) * 180 / np.pi
     if theta < 90 and theta > 0: 
@@ -87,7 +70,6 @@ def quadAssign(p, node):
     return node
     
 
-# @jit
 def assignParticle(p, node):
     # if a leaf has no particle, assign particle to leaf 
     if isinstance(node, leaf) and node.com is None:
@@ -110,13 +92,11 @@ def assignParticle(p, node):
     return node
     
     
-# @jit    
 def in_box(com, corners):
     # a point is in a box if it is gt the bottom left corner and lt top right corner 
     return (com[0] >= corners[0][0] and com[0] <= corners[1][0]) and (com[1] >= corners[0][1] and com[1] <= corners[1][1])
 
 
-# @jit
 def subnode(bbox=np.array([[-1, 1],[-1, 1]]), parent_area=1, parent_mass=1): 
     n = leaf(bbox=bbox )    
     n.com = n.center 
@@ -124,8 +104,7 @@ def subnode(bbox=np.array([[-1, 1],[-1, 1]]), parent_area=1, parent_mass=1):
     
     return n
   
-    
-# @jit
+
 def solve_acc(p, node, L, epsilon=1e-3, G = 1e-6, m_scale=1e3, r_scale=1): 
     # create the 'new' box surrounding the particle 
     bound_corners = np.array([[p[0] - L/2, p[1] - L/2],
@@ -236,7 +215,6 @@ def solve_acc(p, node, L, epsilon=1e-3, G = 1e-6, m_scale=1e3, r_scale=1):
     return solve_acc(p, s, L, epsilon=epsilon, G = G, m_scale=m_scale, r_scale=r_scale)
 
 
-# @jit
 def f_multipole(p, node, L, theta=0.5, epsilon=1e-3, m_scale=1e-3):  
     # check to see if particle is looking at itself,return 0 
     if node.mass is not None and sum((node.com - p)**2)**0.5 < 1e-10:
@@ -257,7 +235,6 @@ def f_multipole(p, node, L, theta=0.5, epsilon=1e-3, m_scale=1e-3):
         return sum(np.array([f_multipole(p, ch, L, theta=theta, epsilon=epsilon, m_scale=m_scale) for ch in [node.ll, node.ur, node.lr, node.ul]]))
          
         
-# @jit
 def leapfrog(r, t_start=0, t_end=10, N=1e3, L=2, theta=0.5, multi=False, epsilon=1e-3, m_scale=1e3, 
             store=False, path='./data', fname=None):
     dt = (t_end - t_start)/N
@@ -309,6 +286,8 @@ def leapfrog(r, t_start=0, t_end=10, N=1e3, L=2, theta=0.5, multi=False, epsilon
         
 
 if __name__ == "__main__":
+    sys.setrecursionlimit(10000) 
+    
     L = 2
     rand_type = 2 
     sig= 0.1

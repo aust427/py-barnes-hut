@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 from tqdm import tqdm
+import pickle as pkl 
 
 import argparse 
 
@@ -286,7 +287,7 @@ def leapfrog(r, t_start=0, t_end=10, N=1e3, L=2, theta=0.5, multi=False, epsilon
         if store: 
             np.savetxt(fname='{}/snap_{:.3f}.txt'.format(path, t), X=pos) 
             
-    return 0 
+    return tpoints
         
 
 if __name__ == "__main__":
@@ -331,6 +332,7 @@ if __name__ == "__main__":
     else: 
         print('Particle data read from the following directory: {}'.format(particle_path))
         particles = np.loadtxt(particle_path)
+        N = particles.shape[0]
         
     if store:
         storedir = 'L{}n{}'.format(L, N)
@@ -344,4 +346,12 @@ if __name__ == "__main__":
     if store:
         print('Particle data will be stored in {}\n'.format(storedir)) 
     
-    leapfrog(particles, L=L, theta=theta, epsilon=epsilon, m_scale=m_scale, store=store, path=storedir)
+    tpoints = leapfrog(particles, L=L, theta=theta, epsilon=epsilon, m_scale=m_scale, store=store, path=storedir)
+    
+    parameters = {'N': N, 'L': L, 'theta': theta, 'path': storedir, 'tpoints': tpoints}
+    if store: 
+        print('Parameter file written to: {}'.format(storedir))
+        with open('{}/param.pkl'.format(storedir), "wb") as file:
+            pkl.dump(parameters, file)
+        
+

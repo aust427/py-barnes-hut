@@ -25,17 +25,37 @@ optional arguments:
                         softening length of the simulation, limiting the max gravitational interaction. Recomended value is 1e-3
   -mass_scale MASS_SCALE, --mass_scale MASS_SCALE
                         path to particle data
-  --store               boolean to store particle results results`
+  --store               boolean to store particle results results
 ```  
 
-## Running the Simulation 
+A presentation based summary can be viewed via the following [Google slides link](https://docs.google.com/presentation/d/1D0xXtax_BdveVjTFs1x-myLu-NqF3165VPx6DBuV6GU/edit?usp=sharing).
+
+## Running the simulation 
 
 The module `simulation.py` can be run via command line via the following example: 
 
-```simulation.py -L 3 -opening_angle 0.2 -softening 1e-2 -N 24 -rand_type 0 --store```
+```simulation.py -L 12 -opening_angle 0.2 -softening 1e-2 -N 14 -rand_type 2 0.2 0.3 --store```
 
-Where inputs are processed using the `argparse` module. 
+Where inputs are processed using the `argparse` module. The following output should be produced: 
+
+```
+Particle data generated via normal distribution with the following parameters: 
+sigma = 0.2; mu = 0.3.
+Simulation running with the following parameters:
+L = 12.0; N = 14; theta = 0.2; softening = 0.01; M_scale = 1000.0.
+Particle data will be stored in ./data/L12.0n14
+
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1001/1001 [00:05<00:00, 175.51it/s]
+Parameter file written to: ./data/L12.0n14
+```
 
 The notebook `example.ipynb` has a step-by-step walkthrough and explanation of the free parameters of the simulation, how particles are generated, and how the simulation operates. 
 
-Example data can be seen and used from the following directory: `./data/example.csv`. 
+Example data can be seen and used from the following directory: `./data/example/particles.csv`. 
+
+## Generating visualizations 
+
+The module `visualizer.py` can be run via command line via the following example (provided simulation data exists to be modeled): 
+
+```visualizer.py -param ./data/example/param.pkl --draw_trees```
+

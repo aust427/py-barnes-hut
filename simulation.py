@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import sys
 from tqdm import tqdm
 
+import os 
+
 import multiprocessing as mp
 
 # from numba.experimental import jitclass
@@ -256,11 +258,11 @@ def f_multipole(p, node, L, theta=0.5, epsilon=1e-3, m_scale=1e-3):
          
         
 # @jit
-def leapfrog(r, t_start=0, t_end=10, N=1e4, L=2, theta=0.5, multi=False, epsilon=1e-3, m_scale=1e3, 
+def leapfrog(r, t_start=0, t_end=10, N=1e3, L=2, theta=0.5, multi=False, epsilon=1e-3, m_scale=1e3, 
             store=False, path='./data', fname=None):
     dt = (t_end - t_start)/N
 
-    tpoints = np.arange(t_start, t_end, dt)
+    tpoints = np.arange(t_start, t_end + dt, dt)
     xpoints = []
     trees = []
     
@@ -301,12 +303,39 @@ def leapfrog(r, t_start=0, t_end=10, N=1e4, L=2, theta=0.5, multi=False, epsilon
             pos[pos[:, 1] < -L/2, 1] = pos[pos[:, 1] < -L/2, 1] + L
             
         if store: 
-            np.savetxt(fname='{}/{}.txt'.format(path, t), X=pos) 
+            np.savetxt(fname='{}/snap_{:.3f}.txt'.format(path, t), X=pos) 
             
     return 0 
         
-#     return tpoints, np.array(xpoints), np.array(trees)
-
 
 if __name__ == "__main__":
-    sys.setrecursionlimit(10000) 
+    L = 2
+    rand_type = 2 
+    sig= 0.1
+    mu = 0.1
+    N = 3 
+    theta = 0.5
+    epsilon = 1e-3
+    m_scale = 1e3 
+
+    particle_path=None
+    store = True 
+    storedir = None 
+    
+    if particle_path is not None:
+        rand_type = 0
+    
+    if rand_type > 0: 
+        fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+        particles = genParticles(rand_type, mu=mu, sig=sig, L=L, N=N)
+    else: 
+        particles = np.loadtxt(particle_path)
+        
+    if storedir is None and store:
+        storedir = 'L{}n{}'.format(L, N)
+        storedir = './data/{}'.format(storedir)
+    
+        if not os.path.isdir(storedir):
+            os.mkdir(storedir)
+
+    leapfrog(particles, L=L, theta=theta, epsilon=epsilon, m_scale=m_scale, store=store, path=storedir)

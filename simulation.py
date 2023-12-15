@@ -21,6 +21,21 @@ import copy
 #     ('length', float32[:]),          # an array field
 # ]
 
+
+def genParticles(rand_type, sig=0, mu=0.1, L=1, N=10):
+    if rand_type == 1: 
+        particles = np.random.random((N, 4)) * L - L/2
+    else: # if rand_type == 2 : 
+        particles = np.random.normal(loc=sig, scale=mu, size=(N, 4)) 
+
+    particles[:, 0:2] = -L/2 + (particles[:, 0:2] - -L/2) % L  
+
+    # force velocity to 0 
+    particles[:, 2:] = 0
+
+    return particles 
+
+
 # @jitclass(spec)
 class leaf():
     def __init__(self, bbox=np.array([[-1, -1],[1, 1]]), depth=1):
@@ -241,7 +256,8 @@ def f_multipole(p, node, L, theta=0.5, epsilon=1e-3, m_scale=1e-3):
          
         
 # @jit
-def leapfrog(r, t_start=0, t_end=10, N=1e4, L=2, theta=0.5, multi=False, epsilon=1e-3, m_scale=1e3):
+def leapfrog(r, t_start=0, t_end=10, N=1e4, L=2, theta=0.5, multi=False, epsilon=1e-3, m_scale=1e3, 
+            store=False, path='./data', fname=None):
     dt = (t_end - t_start)/N
 
     tpoints = np.arange(t_start, t_end, dt)
@@ -283,8 +299,13 @@ def leapfrog(r, t_start=0, t_end=10, N=1e4, L=2, theta=0.5, multi=False, epsilon
             pos[pos[:, 0] < -L/2, 0] = pos[pos[:, 0] < -L/2, 0] + L
             pos[pos[:, 1] > L/2, 1] = pos[pos[:, 1] > L/2, 1] - L
             pos[pos[:, 1] < -L/2, 1] = pos[pos[:, 1] < -L/2, 1] + L
+            
+        if store: 
+            np.savetxt(fname='{}/{}.txt'.format(path, t), X=pos) 
+            
+    return 0 
         
-    return tpoints, np.array(xpoints), np.array(trees)
+#     return tpoints, np.array(xpoints), np.array(trees)
 
 
 if __name__ == "__main__":

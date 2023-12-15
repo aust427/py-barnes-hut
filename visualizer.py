@@ -91,3 +91,43 @@ if __name__ == "__main__":
 
     _ = [os.remove(image_file) for image_file in image_files]
     print('[{:.2f}] Directory cleaned ...'.format(time.time() - tstart))
+    
+    
+    
+# tstart = time.time() 
+
+# # print('[{:.2f}] Creating plot directory ...'.format(time.time() - tstart))
+# # plot_dir = '{}/{}'.format(os.path.abspath(os.getcwd()), 'L{}n{}'.format(trees[0].length[0], n))
+# # if not os.path.isdir(plot_dir):
+# #     os.mkdir(os.path.join(plot_dir))
+
+# # print('[{:.2f}] Initializing multiprocessing ...'.format(time.time() - tstart))
+# # n_cpu = mp.cpu_count()
+# # pool = mp.Pool(processes=n_cpu)
+
+# # mp_trees = np.array_split(trees, n_cpu)
+# # mp_particles = np.array_split(particles_list, n_cpu)
+# # mp_tpoints = np.array_split(np.arange(len(tpoints)), n_cpu)
+    
+# # print('[{:.2f}] Creating plots ...'.format(time.time() - tstart))
+# # for i in range(n_cpu):
+# #     pool.apply_async(renderParticles, args=(mp_particles[i], mp_trees[i], mp_tpoints[i], plot_dir, 300))
+
+# # pool.close()
+# # pool.join()
+# print('[{:.2f}] Multiprocess concluded ...'.format(time.time() - tstart))
+
+
+# print('[{:.2f}] Creating video ...'.format(time.time() - tstart))
+
+# plot_dir = './thetas/'
+# fps=2 #number of frames per second
+# image_files = natsorted([os.path.join(plot_dir,img) for img in os.listdir(plot_dir) if img.endswith(".png")], reverse=False)
+# clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(image_files, fps=fps)
+# clip.write_videofile('test.mp4')
+
+# # print('[{:.2f}] Video created ...'.format(time.time() - tstart))
+
+# # _ = [os.remove(image_file) for image_file in image_files]
+# # os.rmdir(plot_dir)
+# # print('[{:.2f}] Directory cleaned ...'.format(time.time() - tstart))

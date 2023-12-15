@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import sys
 from tqdm import tqdm
 
+import argparse 
+
 import os 
 import sys 
 
@@ -288,33 +290,56 @@ def leapfrog(r, t_start=0, t_end=10, N=1e3, L=2, theta=0.5, multi=False, epsilon
 if __name__ == "__main__":
     sys.setrecursionlimit(10000) 
     
-    L = 2
-    rand_type = 2 
-    sig= 0.1
-    mu = 0.1
-    N = 3 
-    theta = 0.5
-    epsilon = 1e-3
-    m_scale = 1e3 
+    parser = argparse.ArgumentParser(description='2D Barnes-Hut particle simulation code with quasi-periodic boundary conditions.')
 
-    particle_path=None
-    store = True 
+    parser.add_argument("-f", "--file", help="File to particles containing positions and velocity, shape: (N, 4).", metavar="FILE") 
+    parser.add_argument('-L', '--L', help="Side length of the box, spanning [-L/2, L/2].", type=float)
+    parser.add_argument('-N', '--N', help="Number of particles in the simulation.", type=int)
+    parser.add_argument('-rand_type','--rand_type', nargs='+', type=float)
+    parser.add_argument('-opening_angle','--opening_angle', type=float)
+    parser.add_argument('-softening','--softening', type=float)
+    parser.add_argument('-mass_scale','--mass_scale', type=float)
+    parser.add_argument('--store', action='store_true')
+
+    args = parser.parse_args()
+        
+    L = args.L if args.L is not None else 1 
+    rand_type = [int(args.rand_type[0])] if args.rand_type is not None else [1]
+    sig= args.rand_type[1] if args.rand_type is not None and len(args.rand_type) > 1 else 0.1
+    mu = args.rand_type[2] if args.rand_type is not None and len(args.rand_type) > 2 else 0.1
+    N = args.N if args.N is not None else 3
+    theta = args.opening_angle if args.opening_angle is not None else 0.5 # 
+    epsilon = args.softening if args.softening is not None else 1e-3 # 
+    m_scale = args.mass_scale if args.mass_scale is not None else 1e3 # 
+    
+    particle_path = args.file
+    store = args.store 
     storedir = None 
     
-    if particle_path is not None:
-        rand_type = 0
-    
-    if rand_type > 0: 
-        fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+    if (rand_type[0] > 2 or rand_type[0] < 1) and particle_path is None: 
+        print('Random generation defaulting to uniform.')
+        rand_type[0] = 1
+        
+    if particle_path is None: 
+        if rand_type[0] == 1: 
+            print('Particle data generated via uniform distribution.')
+        elif rand_type[0] == 2: 
+            print('Particle data generated via normal distribution with the following parameters: \nsigma = {}; mu = {}.'.format(sig, mu))
         particles = genParticles(rand_type, mu=mu, sig=sig, L=L, N=N)
     else: 
+        print('Particle data read from the following directory: {}'.format(particle_path))
         particles = np.loadtxt(particle_path)
         
-    if storedir is None and store:
+    if store:
         storedir = 'L{}n{}'.format(L, N)
         storedir = './data/{}'.format(storedir)
     
         if not os.path.isdir(storedir):
             os.mkdir(storedir)
 
+    print('Simulation running with the following parameters:') 
+    print('L = {}; N = {}; theta = {}; softening = {}; M_scale = {}.'.format(L, N, theta, epsilon, m_scale))
+    if store:
+        print('Particle data will be stored in {}\n'.format(storedir)) 
+    
     leapfrog(particles, L=L, theta=theta, epsilon=epsilon, m_scale=m_scale, store=store, path=storedir)

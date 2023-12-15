@@ -34,7 +34,7 @@ A presentation based summary can be viewed via the following [Google slides link
 
 The module `simulation.py` can be run via command line via the following example: 
 
-```simulation.py -L 12 -opening_angle 0.2 -softening 1e-2 -N 14 -rand_type 2 0.2 0.3 --store```
+```python3 simulation.py -L 12 -opening_angle 0.2 -softening 1e-2 -N 14 -rand_type 2 0.2 0.3 --store```
 
 Where inputs are processed using the `argparse` module. The following output should be produced: 
 
@@ -52,10 +52,4 @@ Parameter file written to: ./data/L12.0n14
 The notebook `example.ipynb` has a step-by-step walkthrough and explanation of the free parameters of the simulation, how particles are generated, and how the simulation operates. 
 
 Example data can be seen and used from the following directory: `./data/example/particles.csv`. 
-
-## Generating visualizations 
-
-The module `visualizer.py` can be run via command line via the following example (provided simulation data exists to be modeled): 
-
-```visualizer.py -param ./data/example/param.pkl --draw_trees```
 

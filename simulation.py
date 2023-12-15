@@ -297,11 +297,11 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--file", help="File to particles containing positions and velocity, shape: (N, 4).", metavar="FILE") 
     parser.add_argument('-L', '--L', help="Side length of the box, spanning [-L/2, L/2].", type=float)
     parser.add_argument('-N', '--N', help="Number of particles in the simulation.", type=int)
-    parser.add_argument('-rand_type','--rand_type', nargs='+', type=float)
-    parser.add_argument('-opening_angle','--opening_angle', type=float)
-    parser.add_argument('-softening','--softening', type=float)
-    parser.add_argument('-mass_scale','--mass_scale', type=float)
-    parser.add_argument('--store', action='store_true')
+    parser.add_argument('-rand_type','--rand_type', nargs='+', type=float, help='type of random distribution to use for creating the particle data. 1 - uniform, 2 - normal ')
+    parser.add_argument('-opening_angle','--opening_angle', type=float, help='the opening angle which determines if the algorithm looks at cluster-level or individual-level masses. Fiducial value is 0.5')
+    parser.add_argument('-softening','--softening', type=float, help='softening length of the simulation, limiting the max gravitational interaction. Recomended value is 1e-3')
+    parser.add_argument('-mass_scale','--mass_scale', type=float, help='path to particle data')
+    parser.add_argument('--store', action='store_true', help='boolean to store particle results results')
 
     args = parser.parse_args()
         

@@ -249,6 +249,8 @@ def leapfrog(r, t_start=0, t_end=10, N=1e3, L=2, theta=0.5, multi=False, epsilon
     pos = r[:, 0:2]
     vel = r[:, 2: ]
     
+    pos = -L/2 + (pos - -L/2) % L  
+    
     for t in tqdm(tpoints):
         # have to .copy() because we are updating the same array and that causes memory issues 
         xpoints.append(np.hstack((pos, vel, acc)))

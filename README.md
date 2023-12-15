@@ -6,7 +6,8 @@ For more information regarding quasi-periodic boundary conditions with Barnes-Hu
 
 In-depth documentation regarding the free-parameters of the simulation can be seen in the notebook `example.ipynb`. A cursory glance can be seen via the following command and output: 
 
-`python3 simulation.py --help
+```
+python3 simulation.py --help
 usage: simulation.py [-h] [-f FILE] [-L L] [-N N] [-rand_type RAND_TYPE [RAND_TYPE ...]] [-opening_angle OPENING_ANGLE] [-softening SOFTENING] [-mass_scale MASS_SCALE] [--store]
 
 2D Barnes-Hut particle simulation code with quasi-periodic boundary conditions.
@@ -25,7 +26,7 @@ optional arguments:
   -mass_scale MASS_SCALE, --mass_scale MASS_SCALE
                         path to particle data
   --store               boolean to store particle results results`
-  
+```  
 
 ## Running the Simulation 
 
